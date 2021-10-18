@@ -12,11 +12,15 @@ import (
 	"time"
 )
 
-const baseUrl = "https://sandbox.tradier.com/v1/markets"
+const (
+	baseUrl     = "https://sandbox.tradier.com/v1/markets"
+	percentage  = 12.00 / 100.00
+	coefficient = 1.00 + percentage
+)
 
 var (
 	token   = os.Getenv("TRADIER_TOKEN")
-	symbols = [...]string{"SPCE", "AAPL"}
+	symbols = [...]string{"QQQ"}
 )
 
 type OptionChain struct {
@@ -29,14 +33,24 @@ type OptionChain struct {
 func main() {
 	start := time.Now()
 
-	fmt.Println(getPrice("AAPL"))
+	for _, s := range symbols {
+		price := getQuote(s)
+		target := price * coefficient
+
+		for _, exp := range getOptionExpirations(s) {
+			options := getOptions(s, exp.(string))
+			op := findOptimalOptions(options, price, target)
+
+			fmt.Printf("for %s", s)
+			fmt.Println(op)
+		}
+	}
 
 	log.Printf("\nFinished Running in %v", time.Since(start))
 }
 
-func getOptions(symbol string, expiration time.Time) []interface{} {
-	date := formatDate(expiration)
-	endpoint := fmt.Sprintf("%s/options/chains?symbol=%s&expiration=%s", baseUrl, symbol, date)
+func getOptions(symbol string, expiration string) []interface{} {
+	endpoint := fmt.Sprintf("%s/options/chains?symbol=%s&expiration=%s&greeks=false", baseUrl, symbol, expiration)
 	req := buildRequest(endpoint)
 	res := getResponse(req)
 
@@ -64,7 +78,7 @@ func findOptimalOptions(options []interface{}, price float64, target float64) []
 			log.Fatal(err)
 		}
 
-		if otype == "call" && strike >= target && bid/price >= 0.12 {
+		if otype == "call" && strike >= target && bid/price >= percentage {
 			optionChains = append(optionChains, OptionChain{
 				symbol:     symbol,
 				strike:     strike,
@@ -77,8 +91,8 @@ func findOptimalOptions(options []interface{}, price float64, target float64) []
 	return optionChains
 }
 
-func getPrice(symbol string) float64 {
-	endpoint := fmt.Sprintf("%s/quotes?symbols=%s", baseUrl, symbol)
+func getQuote(symbol string) float64 {
+	endpoint := fmt.Sprintf("%s/quotes?symbols=%s&greeks=false", baseUrl, symbol)
 	req := buildRequest(endpoint)
 	res := getResponse(req)
 
@@ -119,7 +133,7 @@ func getOptionExpirations(symbol string) []interface{} {
 // Utils
 
 func buildRequest(endpoint string) *http.Request {
-	u, _ := url.ParseRequestURI(endpoint + "&greeks=false")
+	u, _ := url.ParseRequestURI(endpoint)
 	url := u.String()
 
 	req, _ := http.NewRequest("GET", url, nil)
