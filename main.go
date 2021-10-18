@@ -126,3 +126,8 @@ func getResponse(req *http.Request) []byte {
 
 	return data
 }
+
+func formatDate(date time.Time) string {
+	y, m, d := date.Date()
+	return fmt.Sprintf("%d-%d-%d", y, m, d)
+}
