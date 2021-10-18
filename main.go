@@ -12,9 +12,7 @@ import (
 	"time"
 )
 
-const (
-	baseUrl = "https://sandbox.tradier.com/v1/markets/"
-)
+const baseUrl = "https://sandbox.tradier.com/v1/markets"
 
 var (
 	token   = os.Getenv("TRADIER_TOKEN")
