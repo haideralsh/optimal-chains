@@ -34,6 +34,21 @@ func main() {
 	log.Printf("\nFinished Running in %v", time.Since(start))
 }
 
+func getOptions(symbol string, expiration time.Time) []interface{} {
+	date := formatDate(expiration)
+	endpoint := fmt.Sprintf("%s/options/chains?symbol=%s&expiration=%s", baseUrl, symbol, date)
+	req := buildRequest(endpoint)
+	res := getResponse(req)
+
+	var data map[string]interface{}
+	err := json.Unmarshal(res, &data)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return data["options"].(map[string]interface{})["option"].([]interface{})
+}
 func getPrice(symbol string) float64 {
 	endpoint := fmt.Sprintf("%s/quotes?symbols=%s", baseUrl, symbol)
 	req := buildRequest(endpoint)
