@@ -19,6 +19,13 @@ var (
 	symbols = [...]string{"SPCE", "AAPL"}
 )
 
+type OptionChain struct {
+	symbol     string
+	strike     float64
+	bid        float64
+	expiration string
+}
+
 func main() {
 	start := time.Now()
 
