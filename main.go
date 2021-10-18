@@ -49,6 +49,34 @@ func getOptions(symbol string, expiration time.Time) []interface{} {
 
 	return data["options"].(map[string]interface{})["option"].([]interface{})
 }
+
+func findOptimalOptions(options []interface{}, price float64, target float64) []OptionChain {
+	var optionChains []OptionChain
+
+	for _, o := range options {
+		symbol := fmt.Sprintf("%v", o.(map[string]interface{})["symbol"])
+		expiration := fmt.Sprintf("%v", o.(map[string]interface{})["expiration_date"])
+		otype := fmt.Sprintf("%v", o.(map[string]interface{})["option_type"])
+		strike, err := strconv.ParseFloat(fmt.Sprintf("%v", o.(map[string]interface{})["strike"]), 64)
+		bid, err := strconv.ParseFloat(fmt.Sprintf("%v", o.(map[string]interface{})["bid"]), 64)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if otype == "call" && strike >= target && bid/price >= 0.12 {
+			optionChains = append(optionChains, OptionChain{
+				symbol:     symbol,
+				strike:     strike,
+				bid:        bid,
+				expiration: expiration,
+			})
+		}
+	}
+
+	return optionChains
+}
+
 func getPrice(symbol string) float64 {
 	endpoint := fmt.Sprintf("%s/quotes?symbols=%s", baseUrl, symbol)
 	req := buildRequest(endpoint)
