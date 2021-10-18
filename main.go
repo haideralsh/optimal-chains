@@ -16,7 +16,7 @@ const baseUrl = "https://sandbox.tradier.com/v1/markets"
 
 var (
 	token   = os.Getenv("TRADIER_TOKEN")
-	symbols = [...]string{"AAPL"}
+	symbols = [...]string{"SPCE", "AAPL"}
 )
 
 func main() {
