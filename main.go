@@ -101,6 +101,21 @@ func getPrice(symbol string) float64 {
 	return price
 }
 
+func getOptionExpirations(symbol string) []interface{} {
+	endpoint := fmt.Sprintf("%s//options/expirations?symbol=%s&includeAllRoots=true&strikes=false", baseUrl, symbol)
+	req := buildRequest(endpoint)
+	res := getResponse(req)
+
+	var data map[string]interface{}
+	err := json.Unmarshal(res, &data)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return data["expirations"].(map[string]interface{})["date"].([]interface{})
+}
+
 // Utils
 
 func buildRequest(endpoint string) *http.Request {
