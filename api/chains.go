@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"encoding/json"
@@ -14,13 +14,13 @@ import (
 
 const (
 	baseUrl     = "https://sandbox.tradier.com/v1/markets"
-	percentage  = 12.00 / 100.00
+	percentage  = 9.00 / 100.00
 	coefficient = 1.00 + percentage
 )
 
 var (
 	token   = os.Getenv("TRADIER_TOKEN")
-	symbols = [...]string{"QQQ"}
+	symbols = [...]string{"AAPL", "SNAP"}
 )
 
 type OptionChain struct {
@@ -30,7 +30,7 @@ type OptionChain struct {
 	expiration string
 }
 
-func main() {
+func Handler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 
 	for _, s := range symbols {
@@ -46,7 +46,8 @@ func main() {
 		}
 	}
 
-	log.Printf("\nFinished Running in %v", time.Since(start))
+	msg := fmt.Sprintf("\nFinished Running in %v", time.Since(start))
+	fmt.Fprintf(w, msg)
 }
 
 func getOptions(symbol string, expiration string) []interface{} {
