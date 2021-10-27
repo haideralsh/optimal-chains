@@ -20,7 +20,7 @@ const (
 
 var (
 	token   = os.Getenv("TRADIER_TOKEN")
-	symbols = [...]string{"AAPL", "SNAP"}
+	symbols = [...]string{"AAPL", "SNAP", "TSLA", "MSFT", "NET"}
 )
 
 type OptionChain struct {
