@@ -33,8 +33,18 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	// start := time.Now()
 
 	result := make(map[string][]OptionChain)
+	d := json.NewDecoder(r.Body)
 
-	s := r.URL.Query().Get("symbol")
+	b := struct {
+		Symbol *string `json:"symbol"` // pointer so we can test for field absence
+	}{}
+
+	err := d.Decode(&b)
+	if err != nil {
+		fmt.Fprint(w, err)
+	}
+
+	s := *b.Symbol
 
 	price := getQuote(s)
 	target := price * coefficient
