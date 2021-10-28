@@ -32,7 +32,7 @@ type OptionChain struct {
 func Handler(w http.ResponseWriter, r *http.Request) {
 	// start := time.Now()
 
-	result := make(map[string][]OptionChain)
+	result := []OptionChain{}
 	d := json.NewDecoder(r.Body)
 
 	b := struct {
@@ -53,7 +53,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		options := getOptions(s, exp.(string))
 		op := findOptimalOptions(options, price, target)
 
-		result[s] = op
+		result = append(result, op...)
 	}
 
 	v, err := json.Marshal(result)
