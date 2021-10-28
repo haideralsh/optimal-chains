@@ -19,8 +19,7 @@ const (
 )
 
 var (
-	token   = os.Getenv("TRADIER_TOKEN")
-	symbols = [...]string{"AAPL", "SNAP", "TSLA", "MSFT", "NET"}
+	token = os.Getenv("TRADIER_TOKEN")
 )
 
 type OptionChain struct {
@@ -31,23 +30,29 @@ type OptionChain struct {
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	start := time.Now()
+	// start := time.Now()
 
-	for _, s := range symbols {
-		price := getQuote(s)
-		target := price * coefficient
+	result := make(map[string][]OptionChain)
 
-		for _, exp := range getOptionExpirations(s) {
-			options := getOptions(s, exp.(string))
-			op := findOptimalOptions(options, price, target)
+	s := r.URL.Query().Get("symbol")
 
-			fmt.Printf("for %s", s)
-			fmt.Println(op)
-		}
+	price := getQuote(s)
+	target := price * coefficient
+
+	for _, exp := range getOptionExpirations(s) {
+		options := getOptions(s, exp.(string))
+		op := findOptimalOptions(options, price, target)
+
+		result[s] = op
 	}
 
-	msg := fmt.Sprintf("\nFinished Running in %v", time.Since(start))
-	fmt.Fprintf(w, msg)
+	v, err := json.Marshal(result)
+
+	if err != nil {
+		fmt.Fprint(w, err)
+	}
+
+	fmt.Fprintf(w, string(v))
 }
 
 func getOptions(symbol string, expiration string) []interface{} {
