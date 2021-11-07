@@ -14,29 +14,44 @@ import (
 
 const (
 	baseUrl     = "https://sandbox.tradier.com/v1/markets"
-	percentage  = 9.00 / 100.00
+	percentage  = 12.00 / 100.00
 	coefficient = 1.00 + percentage
 )
 
 var (
-	token = os.Getenv("TRADIER_TOKEN")
+	token   = os.Getenv("TRADIER_TOKEN")
+	symbols = [...]string{
+		"AAPL",
+		"TSLA",
+		"SNAP",
+		"MSFT",
+		"NET",
+		"BABA",
+		"SHOP",
+		"NOK",
+		"UAL",
+		"NKE",
+		"HOOD",
+		"GOOG",
+		"FB",
+		"F",
+		"NVDA",
+		"ADBE",
+	}
 )
 
 type OptionChain struct {
-	symbol     string
-	strike     float64
-	bid        float64
-	expiration string
+	Percentage float64 `json:"percentage"`
+	Strike     float64 `json:"strike"`
+	Bid        float64 `json:"bid"`
+	Expiration string  `json:"expiration"`
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	// start := time.Now()
-
-	result := []OptionChain{}
 	d := json.NewDecoder(r.Body)
 
 	b := struct {
-		Symbol *string `json:"symbol"` // pointer so we can test for field absence
+		Symbol []*string `json:"symbols"`
 	}{}
 
 	err := d.Decode(&b)
@@ -44,47 +59,68 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, err)
 	}
 
-	s := *b.Symbol
+	quotes := make(map[string]<-chan float64)
 
-	price := getQuote(s)
-	target := price * coefficient
+	ops := make(map[string]<-chan []interface{})
+	var chs []<-chan []interface{}
 
-	for _, exp := range getOptionExpirations(s) {
-		options := getOptions(s, exp.(string))
-		op := findOptimalOptions(options, price, target)
+	for _, s := range symbols {
+		quotes[s] = getQuote(s)
+		chs = append(chs, getOptionExpirations(s))
 
-		result = append(result, op...)
+		for _, ch := range chs {
+			for _, exp := range <-ch {
+				ops[s] = getOptions(s, exp.(string))
+			}
+		}
 	}
 
-	v, err := json.Marshal(result)
+	oops := make(map[string][]OptionChain)
 
-	if err != nil {
-		fmt.Fprint(w, err)
+	for s, v := range ops {
+		price := <-quotes[s]
+		target := price * coefficient
+
+		oops[s] = findOptimalOptions(<-v, price, target)
 	}
 
-	fmt.Fprintf(w, string(v))
-}
-
-func getOptions(symbol string, expiration string) []interface{} {
-	endpoint := fmt.Sprintf("%s/options/chains?symbol=%s&expiration=%s&greeks=false", baseUrl, symbol, expiration)
-	req := buildRequest(endpoint)
-	res := getResponse(req)
-
-	var data map[string]interface{}
-	err := json.Unmarshal(res, &data)
+	res, err := json.Marshal(oops)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return data["options"].(map[string]interface{})["option"].([]interface{})
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(res)
+}
+
+func getOptions(symbol string, expiration string) <-chan []interface{} {
+	r := make(chan []interface{})
+
+	go func() {
+		defer close(r)
+
+		endpoint := fmt.Sprintf("%s/options/chains?symbol=%s&expiration=%s&greeks=false", baseUrl, symbol, expiration)
+		req := buildRequest(endpoint)
+		res := getResponse(req)
+
+		var data map[string]interface{}
+		err := json.Unmarshal(res, &data)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		r <- data["options"].(map[string]interface{})["option"].([]interface{})
+	}()
+
+	return r
 }
 
 func findOptimalOptions(options []interface{}, price float64, target float64) []OptionChain {
 	var optionChains []OptionChain
 
 	for _, o := range options {
-		symbol := fmt.Sprintf("%v", o.(map[string]interface{})["symbol"])
 		expiration := fmt.Sprintf("%v", o.(map[string]interface{})["expiration_date"])
 		otype := fmt.Sprintf("%v", o.(map[string]interface{})["option_type"])
 		strike, err := strconv.ParseFloat(fmt.Sprintf("%v", o.(map[string]interface{})["strike"]), 64)
@@ -96,10 +132,10 @@ func findOptimalOptions(options []interface{}, price float64, target float64) []
 
 		if otype == "call" && strike >= target && bid/price >= percentage {
 			optionChains = append(optionChains, OptionChain{
-				symbol:     symbol,
-				strike:     strike,
-				bid:        bid,
-				expiration: expiration,
+				Percentage: (bid / price) * 100,
+				Strike:     strike,
+				Bid:        bid,
+				Expiration: expiration,
 			})
 		}
 	}
@@ -107,43 +143,59 @@ func findOptimalOptions(options []interface{}, price float64, target float64) []
 	return optionChains
 }
 
-func getQuote(symbol string) float64 {
-	endpoint := fmt.Sprintf("%s/quotes?symbols=%s&greeks=false", baseUrl, symbol)
-	req := buildRequest(endpoint)
-	res := getResponse(req)
+func getQuote(symbol string) <-chan float64 {
+	r := make(chan float64)
 
-	var data map[string]interface{}
-	err := json.Unmarshal(res, &data)
+	go func() {
+		defer close(r)
 
-	if err != nil {
-		log.Fatal(err)
-	}
+		endpoint := fmt.Sprintf("%s/quotes?symbols=%s&greeks=false", baseUrl, symbol)
+		req := buildRequest(endpoint)
+		res := getResponse(req)
 
-	raw := data["quotes"].(map[string]interface{})["quote"].(map[string]interface{})["last"]
-	str := fmt.Sprintf("%v", raw)
+		var data map[string]interface{}
+		err := json.Unmarshal(res, &data)
 
-	price, err := strconv.ParseFloat(str, 64)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	if err != nil {
-		log.Fatal(err)
-	}
+		raw := data["quotes"].(map[string]interface{})["quote"].(map[string]interface{})["last"]
+		str := fmt.Sprintf("%v", raw)
 
-	return price
+		quote, err := strconv.ParseFloat(str, 64)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		r <- quote
+	}()
+
+	return r
 }
 
-func getOptionExpirations(symbol string) []interface{} {
-	endpoint := fmt.Sprintf("%s//options/expirations?symbol=%s&includeAllRoots=true&strikes=false", baseUrl, symbol)
-	req := buildRequest(endpoint)
-	res := getResponse(req)
+func getOptionExpirations(symbol string) <-chan []interface{} {
+	r := make(chan []interface{})
 
-	var data map[string]interface{}
-	err := json.Unmarshal(res, &data)
+	go func() {
+		defer close(r)
 
-	if err != nil {
-		log.Fatal(err)
-	}
+		endpoint := fmt.Sprintf("%s//options/expirations?symbol=%s&includeAllRoots=true&strikes=false", baseUrl, symbol)
+		req := buildRequest(endpoint)
+		res := getResponse(req)
 
-	return data["expirations"].(map[string]interface{})["date"].([]interface{})
+		var data map[string]interface{}
+		err := json.Unmarshal(res, &data)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		r <- data["expirations"].(map[string]interface{})["date"].([]interface{})
+	}()
+
+	return r
 }
 
 // Utils
