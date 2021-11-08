@@ -58,6 +58,9 @@ type RequestBody struct {
 func Handler(w http.ResponseWriter, r *http.Request) {
 	// Unused for now
 	symbols, err := decodeRequest(r)
+	if err != nil {
+		fmt.Fprint(w, err)
+	}
 
 	quotes := make(map[string]<-chan float64)
 	options := make(map[string]<-chan []interface{})
