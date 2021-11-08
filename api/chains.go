@@ -24,7 +24,7 @@ var (
 	token = os.Getenv("TRADIER_TOKEN")
 
 	// Sample stock symbols used for local testing
-	symbols = [...]string{
+	mock = [...]string{
 		"AAPL",
 		"TSLA",
 		"SNAP",
@@ -57,7 +57,7 @@ type RequestBody struct {
 
 func Handler(w http.ResponseWriter, r *http.Request) {
 	// Unused for now
-	_, err := decodeRequest(r)
+	symbols, err := decodeRequest(r)
 
 	quotes := make(map[string]<-chan float64)
 	options := make(map[string]<-chan []interface{})
