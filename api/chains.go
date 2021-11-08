@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+type Symbol = string
+
 const (
 	baseUrl     = "https://sandbox.tradier.com/v1/markets"
 	percentage  = 12.00 / 100.00
@@ -19,7 +21,9 @@ const (
 )
 
 var (
-	token   = os.Getenv("TRADIER_TOKEN")
+	token = os.Getenv("TRADIER_TOKEN")
+
+	// Sample stock symbols used for local testing
 	symbols = [...]string{
 		"AAPL",
 		"TSLA",
@@ -47,51 +51,56 @@ type OptionChain struct {
 	Expiration string  `json:"expiration"`
 }
 
+type RequestBody struct {
+	Symbols []Symbol `json:"symbols"`
+}
+
 func Handler(w http.ResponseWriter, r *http.Request) {
-	d := json.NewDecoder(r.Body)
-
-	b := struct {
-		Symbol []*string `json:"symbols"`
-	}{}
-
-	err := d.Decode(&b)
-	if err != nil {
-		fmt.Fprint(w, err)
-	}
+	// Unused for now
+	_, err := decodeRequest(r)
 
 	quotes := make(map[string]<-chan float64)
-
-	ops := make(map[string]<-chan []interface{})
-	var chs []<-chan []interface{}
+	options := make(map[string]<-chan []interface{})
+	optimal := make(map[string][]OptionChain)
+	var exps []<-chan []interface{}
 
 	for _, s := range symbols {
 		quotes[s] = getQuote(s)
-		chs = append(chs, getOptionExpirations(s))
+		exps = append(exps, getOptionExpirations(s))
 
-		for _, ch := range chs {
+		for _, ch := range exps {
 			for _, exp := range <-ch {
-				ops[s] = getOptions(s, exp.(string))
+				options[s] = getOptions(s, exp.(string))
 			}
 		}
 	}
 
-	oops := make(map[string][]OptionChain)
-
-	for s, v := range ops {
+	for s, ops := range options {
 		price := <-quotes[s]
 		target := price * coefficient
 
-		oops[s] = findOptimalOptions(<-v, price, target)
+		optimal[s] = findOptimalOptions(<-ops, price, target)
 	}
 
-	res, err := json.Marshal(oops)
-
+	res, err := json.Marshal(optimal)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprint(w, err)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(res)
+}
+
+func decodeRequest(r *http.Request) ([]Symbol, error) {
+	d := json.NewDecoder(r.Body)
+	b := RequestBody{}
+
+	err := d.Decode(&b)
+	if err != nil {
+		return nil, err
+	}
+
+	return b.Symbols, nil
 }
 
 func getOptions(symbol string, expiration string) <-chan []interface{} {
