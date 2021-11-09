@@ -12,8 +12,7 @@ const Home: NextPage = () => {
       method: "POST",
     })
       .then((res) => res.json())
-      .then((data) => JSON.parse(data.body))
-      .then((body) => setResult(body.message));
+      .then((data) => setResult(data));
   };
 
   return (
