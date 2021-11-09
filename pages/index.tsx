@@ -4,7 +4,7 @@ import styled from "styled-components";
 
 const Home: NextPage = () => {
   const [symbols, setSymbols] = useState("");
-  const [result, setResult] = useState();
+  const [result, setResult] = useState<any>({});
 
   const handleFind = async () => {
     fetch("/api/chains/", {
@@ -25,7 +25,32 @@ const Home: NextPage = () => {
         />
         <Button onClick={handleFind}>Find</Button>
       </SearchWrapper>
-      <p>{JSON.stringify(result)}</p>
+      {Object.keys(result).length > 0 && (
+        <table>
+          <thead>
+            <tr>
+              <td>Symbol</td>
+              <td>Expiration</td>
+              <td>Strike</td>
+              <td>Bid</td>
+              <td>Percentage</td>
+            </tr>
+          </thead>
+          <tbody>
+            {Object.keys(result).map((symbol) => {
+              return result[symbols]?.map((option: any) => (
+                <tr key={option.expiration}>
+                  <td>{symbol}</td>
+                  <td>{option?.expiration}</td>
+                  <td>{option?.strike}</td>
+                  <td>{option?.bid}</td>
+                  <td>{option?.percentage}</td>
+                </tr>
+              ));
+            })}
+          </tbody>
+        </table>
+      )}
     </Wrapper>
   );
 };
