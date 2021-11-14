@@ -56,37 +56,39 @@ type RequestBody struct {
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	// Unused for now
-	symbols, err := decodeRequest(r)
+	symbols, err := parseRequest(r)
 	if err != nil {
 		fmt.Fprint(w, err)
 	}
 
 	quotes := make(map[string]<-chan float64)
-	options := make(map[string]<-chan []interface{})
+	options := make(map[string][]<-chan []interface{})
 	optimal := make(map[string][]OptionChain)
-	var exps []<-chan []interface{}
+	expirations := make(map[string]<-chan []interface{})
 
 	for _, s := range symbols {
 		quotes[s] = getQuote(s)
-		exps = append(exps, getOptionExpirations(s))
+		expirations[s] = getOptionExpirations(s)
+	}
 
-		for _, ch := range exps {
-			for _, exp := range <-ch {
-				options[s] = getOptions(s, exp.(string))
-			}
+	for s, expsCh := range expirations {
+		for _, exp := range <-expsCh {
+			options[s] = append(options[s], getOptions(s, exp.(string)))
 		}
 	}
 
-	for s, ops := range options {
-		price := <-quotes[s]
-		target := price * coefficient
+	for _, s := range symbols {
+		q := <-quotes[s]
 
-		optimal[s] = findOptimalOptions(<-ops, price, target)
+		target := q * coefficient
+		for _, o := range options[s] {
+			optimal[s] = findOptimalOptions(<-o, q, target)
+		}
 	}
 
 	res, err := json.Marshal(optimal)
 	if err != nil {
+		log.Print(err)
 		fmt.Fprint(w, err)
 	}
 
@@ -94,7 +96,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func decodeRequest(r *http.Request) ([]Symbol, error) {
+func parseRequest(r *http.Request) ([]Symbol, error) {
 	d := json.NewDecoder(r.Body)
 	b := RequestBody{}
 
