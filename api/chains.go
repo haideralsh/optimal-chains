@@ -16,31 +16,29 @@ type Symbol = string
 
 const (
 	baseUrl     = "https://sandbox.tradier.com/v1/markets"
-	percentage  = 12.00 / 100.00
+	percentage  = 12.00 / 100.00 // @todo: Make this configurable
 	coefficient = 1.00 + percentage
 )
 
 var (
 	token = os.Getenv("TRADIER_TOKEN")
-
-	// Sample stock symbols used for local testing
-	mock = [...]string{
+	mock  = [...]Symbol{ // Sample stock symbols used for local testing
 		"AAPL",
-		"TSLA",
-		"SNAP",
+		"ADBE",
+		"BABA",
+		"F",
+		"FB",
+		"GOOG",
+		"HOOD",
 		"MSFT",
 		"NET",
-		"BABA",
-		"SHOP",
-		"NOK",
-		"UAL",
 		"NKE",
-		"HOOD",
-		"GOOG",
-		"FB",
-		"F",
+		"NOK",
 		"NVDA",
-		"ADBE",
+		"SHOP",
+		"SNAP",
+		"TSLA",
+		"UAL",
 	}
 )
 
@@ -71,8 +69,8 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		expirations[s] = getOptionExpirations(s)
 	}
 
-	for s, expsCh := range expirations {
-		for _, exp := range <-expsCh {
+	for _, s := range symbols {
+		for _, exp := range <-expirations[s] {
 			options[s] = append(options[s], getOptions(s, exp.(string)))
 		}
 	}
@@ -108,7 +106,7 @@ func parseRequest(r *http.Request) ([]Symbol, error) {
 	return b.Symbols, nil
 }
 
-func getOptions(symbol string, expiration string) <-chan []interface{} {
+func getOptions(symbol, expiration string) <-chan []interface{} {
 	r := make(chan []interface{})
 
 	go func() {
@@ -131,7 +129,7 @@ func getOptions(symbol string, expiration string) <-chan []interface{} {
 	return r
 }
 
-func findOptimalOptions(options []interface{}, price float64, target float64) []OptionChain {
+func findOptimalOptions(options []interface{}, price, target float64) []OptionChain {
 	var optionChains []OptionChain
 
 	for _, o := range options {
