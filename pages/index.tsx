@@ -20,7 +20,9 @@ const Home: NextPage = () => {
       setLoading(true);
 
       fetch("/api/chains/", {
-        body: JSON.stringify({ symbols: symbols?.split(",") }),
+        body: JSON.stringify({
+          symbols: symbols?.split(",").map((s) => s.trim()),
+        }),
         method: "POST",
       })
         .then((res) => res.json())
