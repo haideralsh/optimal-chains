@@ -4,7 +4,6 @@ import { useState } from "react";
 
 const Home: NextPage = () => {
   const [symbols, setSymbols] = useState("");
-  const [percentage, setPercentage] = useState(12);
 
   const [data, setData] = useState<any>({});
   const [error, setError] = useState("");
@@ -15,6 +14,7 @@ const Home: NextPage = () => {
     const formData = new FormData(event.target);
 
     const symbols = formData.get("symbols");
+    const percentage = formData.get("percentage");
 
     if (symbols && typeof symbols === "string") {
       setLoading(true);
@@ -22,6 +22,7 @@ const Home: NextPage = () => {
       fetch("/api/chains/", {
         body: JSON.stringify({
           symbols: symbols?.split(",").map((s) => s.trim()),
+          percentage: Number(percentage),
         }),
         method: "POST",
       })
@@ -69,9 +70,7 @@ const Home: NextPage = () => {
                 className="bg-gray-100 focus:bg-gray-200 text-gray-700 outline-none uppercase p-1 px-3 rounded-r-full text-sm placeholder:text-gray-400 placeholder:text-sm placeholder:normal-case placeholder:font-sans"
                 max={100}
                 min={0}
-                value={percentage}
                 type="number"
-                onChange={(e) => setPercentage(Number(e.target.value))}
               />
             </fieldset>
           </div>
