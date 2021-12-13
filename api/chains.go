@@ -80,7 +80,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 		target := q * coefficient
 		for _, o := range options[s] {
-			optimal[s] = findOptimalOptions(<-o, q, target)
+			opt := findOptimalOptions(<-o, q, target)
+			if len(opt) > 0 {
+				optimal[s] = append(optimal[s], opt...)
+			}
 		}
 	}
 
