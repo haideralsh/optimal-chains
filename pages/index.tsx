@@ -83,7 +83,7 @@ const Home: NextPage = () => {
           </button>
         </form>
         {Object.keys(data).length > 0 && (
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="min-w-full divide-y divide-gray-200 mt-2">
             <thead className="bg-gray-50">
               <tr>
                 <th
