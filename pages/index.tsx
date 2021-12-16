@@ -35,8 +35,8 @@ const Home: NextPage = () => {
   };
 
   return (
-    <main className="flex justify-center min-w-[500px]">
-      <div className="flex flex-col mt-8">
+    <main className="flex h-full w-full justify-center">
+      <div className="flex flex-col mt-8 min-w-[500px]">
         <h1 className="text-2xl mb-6 text-gray-600">Optimal Chains</h1>
         <form
           className="flex gap-4 items-end"
