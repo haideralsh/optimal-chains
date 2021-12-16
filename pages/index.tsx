@@ -127,8 +127,8 @@ const Home: NextPage = () => {
             <tbody className="bg-white divide-y divide-gray-200 text-sm">
               {Object.keys(data).map((symbol) =>
                 data[symbol]?.map((option: any) => (
-                  <tr key={option.expiration}>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-500">
+                  <tr key={`${symbol}-${option.expiration}`}>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-500 uppercase">
                       {symbol}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-500">
