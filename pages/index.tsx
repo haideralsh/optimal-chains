@@ -35,8 +35,8 @@ const Home: NextPage = () => {
   };
 
   return (
-    <main className="flex h-full w-full justify-center">
-      <div className="flex flex-col mt-8 min-w-[500px]">
+    <main className="flex justify-center min-w-[500px]">
+      <div className="flex flex-col mt-8">
         <h1 className="text-2xl mb-6 text-gray-600">Optimal Chains</h1>
         <form
           className="flex gap-4 items-end"
@@ -64,13 +64,20 @@ const Home: NextPage = () => {
               >
                 Percentage
               </label>
-              <input
-                name="percentage"
-                className="bg-gray-100 focus:bg-gray-200 text-gray-700 outline-none uppercase p-1 px-3 rounded-r-full text-sm placeholder:text-gray-400 placeholder:text-sm placeholder:normal-case placeholder:font-sans"
-                max={100}
-                min={0}
-                type="number"
-              />
+              <div className="relative">
+                <span className="absolute flex items-center right-3 text-sm text-gray-400 top-0 bottom-0">
+                  %
+                </span>
+                <input
+                  name="percentage"
+                  className="w-full bg-gray-100 focus:bg-gray-200 text-gray-700 outline-none uppercase p-1 px-3 rounded-r-full text-sm placeholder:text-gray-400 placeholder:text-sm placeholder:normal-case placeholder:font-sans"
+                  max={100}
+                  maxLength={3}
+                  min={0}
+                  defaultValue="12"
+                  type="number"
+                />
+              </div>
             </fieldset>
           </div>
           <button
