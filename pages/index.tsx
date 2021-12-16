@@ -1,5 +1,4 @@
 import type { NextPage } from "next";
-import Image from "next";
 import { useState } from "react";
 
 const Home: NextPage = () => {
