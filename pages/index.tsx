@@ -48,7 +48,7 @@ const Home: NextPage = () => {
 
   return (
     <main className="flex h-full w-full justify-center">
-      <div className="flex flex-col mt-8 min-w-[500px]">
+      <div className="flex flex-col mt-8 min-w-[560px]">
         <div className="mb-8">
           <Image src="/logo.svg" alt="app logo" width={115} height={58} />
         </div>
