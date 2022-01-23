@@ -1,4 +1,5 @@
 import type { NextPage } from "next";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import OptionsTable from "../components/OptionsTable";
 
@@ -48,7 +49,9 @@ const Home: NextPage = () => {
   return (
     <main className="flex h-full w-full justify-center">
       <div className="flex flex-col mt-8 min-w-[500px]">
-        <h1 className="text-2xl mb-6 text-gray-600">Optimal Chains</h1>
+        <div className="mb-8">
+          <Image src="/logo.svg" alt="app logo" width={115} height={58} />
+        </div>
         <form
           className="flex gap-4 items-end"
           name="optimal-chains"
@@ -56,7 +59,7 @@ const Home: NextPage = () => {
         >
           <div className="flex items-end gap-0.5">
             <fieldset className="flex flex-col w-72">
-              <label htmlFor="symbols" className="text-gray-500 text-sm pb-2">
+              <label htmlFor="symbols" className="text-gray-500 text-xs pb-1">
                 Enter one or more symbols
               </label>
               <input
@@ -71,7 +74,7 @@ const Home: NextPage = () => {
             <fieldset className="flex flex-col w-18">
               <label
                 htmlFor="percentage"
-                className="text-gray-500 text-sm pb-2"
+                className="text-gray-500 text-xs pb-1"
               >
                 Percentage
               </label>
@@ -100,7 +103,7 @@ const Home: NextPage = () => {
         </form>
 
         {error ? (
-          <p className="text-sm text-gray-500 mt-8">{error}</p>
+          <p className="text-xs text-gray-500 mt-8">{error}</p>
         ) : (
           <OptionsTable symbolOptions={data} />
         )}
