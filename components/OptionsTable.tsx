@@ -1,3 +1,5 @@
+import { isEmpty } from "../pages";
+
 type Option = {
   expiration: string;
   strike: number;
@@ -45,6 +47,8 @@ const OptionsTableHead: React.FC = () => (
 );
 
 const OptionsTable: React.FC<OptionsTableProps> = ({ symbolOptions }) => {
+  if (isEmpty(symbolOptions)) return null;
+
   return (
     <table className="min-w-full divide-y divide-gray-200 mt-8">
       <OptionsTableHead />

@@ -2,6 +2,8 @@ import type { NextPage } from "next";
 import { useEffect, useState } from "react";
 import OptionsTable from "../components/OptionsTable";
 
+export const isEmpty = (obj: Record<any, any>) => Object.keys(obj).length === 0;
+
 const Home: NextPage = () => {
   const [symbols, setSymbols] = useState("");
 
@@ -18,15 +20,20 @@ const Home: NextPage = () => {
       return;
     }
 
-    fetch("/api/chains/", {
+    fetch("https://optimal-chains.vercel.app/api/chains", {
       body: JSON.stringify({
         symbols: Array.from(getSymbolsSet()),
       }),
       method: "POST",
     })
       .then((res) => res.json())
-      .then((data) => setData(data))
-      .catch(() => setError("An error has occurred."))
+      .then((data) => {
+        setData(data);
+
+        if (isEmpty(data))
+          setError(`No options found were found for ${symbols}`);
+      })
+      .catch(() => setError("An error has occurred"))
       .finally(() => setLoading(false));
   };
 
@@ -85,22 +92,21 @@ const Home: NextPage = () => {
             </fieldset>
           </div>
           <button
-            disabled={symbols.length === 0 || loading}
+            disabled={symbols.trim().length === 0 || loading}
             className="bg-teal-700 rounded-full text-white py-1 px-6 text-sm disabled:bg-gray-300 disabled:text-gray-400 "
           >
             {loading ? "Loading..." : "Find"}
           </button>
         </form>
-        {!isEmpty(data) ? (
-          <OptionsTable symbolOptions={data} />
+
+        {error ? (
+          <p className="text-sm text-gray-500 mt-8">{error}</p>
         ) : (
-          <p>There are no option chains for {symbols}</p>
+          <OptionsTable symbolOptions={data} />
         )}
       </div>
     </main>
   );
 };
-
-const isEmpty = (obj: Record<any, any>) => Object.keys(obj).length === 0;
 
 export default Home;
