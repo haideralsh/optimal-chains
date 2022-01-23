@@ -11,29 +11,32 @@ const Home: NextPage = () => {
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
-    const formData = new FormData(event.target);
+    setLoading(true);
 
-    const symbols = formData.get("symbols");
-    const percentage = formData.get("percentage");
-
-    if (symbols && typeof symbols === "string") {
-      setLoading(true);
-
-      fetch("/api/chains/", {
-        body: JSON.stringify({
-          symbols: symbols?.split(",").map((s) => s.trim()),
-          percentage: Number(percentage),
-        }),
-        method: "POST",
-      })
-        .then((res) => res.json())
-        .then((data) => setData(data))
-        .catch(() => setError("An error has occurred."))
-        .finally(() => setLoading(false));
-    } else {
+    if (!formIsValid()) {
       setError("Please enter valid symbols.");
+      return;
     }
+
+    fetch("/api/chains/", {
+      body: JSON.stringify({
+        symbols: Array.from(getSymbolsSet()),
+      }),
+      method: "POST",
+    })
+      .then((res) => res.json())
+      .then((data) => setData(data))
+      .catch(() => setError("An error has occurred."))
+      .finally(() => setLoading(false));
   };
+
+  const formIsValid = () => {
+    const symbolsSet = getSymbolsSet();
+
+    return symbolsSet.size > 0;
+  };
+
+  const getSymbolsSet = () => new Set(symbols?.split(",").map((s) => s.trim()));
 
   return (
     <main className="flex h-full w-full justify-center">
