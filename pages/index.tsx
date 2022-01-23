@@ -3,6 +3,12 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import OptionsTable from "../components/OptionsTable";
 
+const inDev = process.env.NODE_ENV === "development";
+
+const API_ENDPOINT = inDev
+  ? "https://optimal-chains.vercel.app/api/chains"
+  : "/api/chains/";
+
 export const isEmpty = (obj: Record<any, any>) => Object.keys(obj).length === 0;
 
 const Home: NextPage = () => {
@@ -21,7 +27,7 @@ const Home: NextPage = () => {
       return;
     }
 
-    fetch("https://optimal-chains.vercel.app/api/chains", {
+    fetch(API_ENDPOINT, {
       body: JSON.stringify({
         symbols: Array.from(getSymbolsSet()),
       }),
