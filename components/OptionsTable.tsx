@@ -54,7 +54,7 @@ const OptionsTable: React.FC<OptionsTableProps> = ({ symbolOptions }) => {
       <OptionsTableHead />
       <tbody className="bg-white divide-y divide-gray-200 text-sm">
         {Object.keys(symbolOptions).map((symbol) =>
-          symbolOptions[symbol].map((option: any) => (
+          symbolOptions[symbol].map((option: Option) => (
             <tr
               key={`${symbol}-${option.expiration}-${option.strike}-${option.bid}`}
             >
