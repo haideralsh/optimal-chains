@@ -18,9 +18,15 @@ const Home: NextPage = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const resetState = () => {
+    setData({});
+    setError("");
+    setLoading(true);
+  };
+
   const handleSubmit = async (event: any) => {
     event.preventDefault();
-    setLoading(true);
+    resetState();
 
     if (!formIsValid()) {
       setError("Please enter valid symbols.");
