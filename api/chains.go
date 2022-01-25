@@ -56,7 +56,8 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, err)
 	}
 
-	symbols, percentage := parsedRequest.Symbols, parsedRequest.Percentage
+	symbols := parsedRequest.Symbols
+	percentage := parsedRequest.Percentage / 100.00
 	coefficient := 1.00 + percentage
 
 	quotes := make(map[string]<-chan float64)
