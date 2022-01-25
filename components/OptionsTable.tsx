@@ -55,7 +55,9 @@ const OptionsTable: React.FC<OptionsTableProps> = ({ symbolOptions }) => {
       <tbody className="bg-white divide-y divide-gray-200 text-sm">
         {Object.keys(symbolOptions).map((symbol) =>
           symbolOptions[symbol].map((option: any) => (
-            <tr key={`${symbol}-${option.expiration}`}>
+            <tr
+              key={`${symbol}-${option.expiration}-${option.strike}-${option.bid}`}
+            >
               <td className="px-6 py-4 whitespace-nowrap text-gray-500 uppercase">
                 {symbol}
               </td>
