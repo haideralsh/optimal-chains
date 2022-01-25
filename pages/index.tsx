@@ -13,6 +13,7 @@ export const isEmpty = (obj: Record<any, any>) => Object.keys(obj).length === 0;
 
 const Home: NextPage = () => {
   const [symbols, setSymbols] = useState("");
+  const [percentage, setPercentage] = useState(12);
 
   const [data, setData] = useState<any>({});
   const [error, setError] = useState("");
@@ -36,6 +37,7 @@ const Home: NextPage = () => {
     fetch(API_ENDPOINT, {
       body: JSON.stringify({
         symbols: Array.from(getSymbolsSet()),
+        percentage,
       }),
       method: "POST",
     })
@@ -99,15 +101,16 @@ const Home: NextPage = () => {
                   className="w-full bg-gray-100 focus:bg-gray-200 text-gray-700 outline-none uppercase p-1 px-3 rounded-r-full text-sm placeholder:text-gray-400 placeholder:text-sm placeholder:normal-case placeholder:font-sans"
                   max={100}
                   maxLength={3}
-                  min={0}
-                  defaultValue="12"
+                  min={1}
                   type="number"
+                  value={percentage}
+                  onChange={(e) => setPercentage(Number(e.target.value))}
                 />
               </div>
             </fieldset>
           </div>
           <button
-            disabled={symbols.trim().length === 0 || loading}
+            disabled={symbols.trim().length === 0 || percentage <= 0 || loading}
             className="bg-teal-700 rounded-full text-white py-1 px-6 text-sm disabled:bg-gray-300 disabled:text-gray-400 "
           >
             {loading ? "Loading..." : "Find"}

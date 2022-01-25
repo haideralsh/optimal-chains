@@ -14,11 +14,7 @@ import (
 
 type Symbol = string
 
-const (
-	baseUrl     = "https://sandbox.tradier.com/v1/markets"
-	percentage  = 12.00 / 100.00 // @todo: Make this configurable
-	coefficient = 1.00 + percentage
-)
+const baseUrl = "https://sandbox.tradier.com/v1/markets"
 
 var (
 	token = os.Getenv("TRADIER_TOKEN")
@@ -50,14 +46,18 @@ type OptionChain struct {
 }
 
 type RequestBody struct {
-	Symbols []Symbol `json:"symbols"`
+	Symbols    []Symbol `json:"symbols"`
+	Percentage float64  `json:"percentage"`
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	symbols, err := parseRequest(r)
+	parsedRequest, err := parseRequest(r)
 	if err != nil {
 		fmt.Fprint(w, err)
 	}
+
+	symbols, percentage := parsedRequest.Symbols, parsedRequest.Percentage
+	coefficient := 1.00 + percentage
 
 	quotes := make(map[string]<-chan float64)
 	options := make(map[string][]<-chan []interface{})
@@ -80,7 +80,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 		target := q * coefficient
 		for _, o := range options[s] {
-			opt := findOptimalOptions(<-o, q, target)
+			opt := findOptimalOptions(<-o, q, target, percentage)
 			if len(opt) > 0 {
 				optimal[s] = append(optimal[s], opt...)
 			}
@@ -99,16 +99,20 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func parseRequest(r *http.Request) ([]Symbol, error) {
+func parseRequest(r *http.Request) (RequestBody, error) {
 	d := json.NewDecoder(r.Body)
 	b := RequestBody{}
 
 	err := d.Decode(&b)
 	if err != nil {
-		return nil, err
+		return RequestBody{}, err
 	}
 
-	return b.Symbols, nil
+	if len(b.Symbols) < 0 || b.Percentage == 0 {
+		return RequestBody{}, err
+	}
+
+	return b, nil
 }
 
 func getOptions(symbol, expiration string) <-chan []interface{} {
@@ -134,7 +138,7 @@ func getOptions(symbol, expiration string) <-chan []interface{} {
 	return r
 }
 
-func findOptimalOptions(options []interface{}, price, target float64) []OptionChain {
+func findOptimalOptions(options []interface{}, price, target, percentage float64) []OptionChain {
 	var optionChains []OptionChain
 
 	for _, o := range options {
