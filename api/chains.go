@@ -105,11 +105,7 @@ func parseRequest(r *http.Request) (RequestBody, error) {
 	b := RequestBody{}
 
 	err := d.Decode(&b)
-	if err != nil {
-		return RequestBody{}, err
-	}
-
-	if len(b.Symbols) < 0 || b.Percentage == 0 {
+	if err != nil || len(b.Symbols) < 0 || b.Percentage == 0 {
 		return RequestBody{}, err
 	}
 
