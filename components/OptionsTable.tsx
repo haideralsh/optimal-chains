@@ -65,10 +65,10 @@ const OptionsTable: React.FC<OptionsTableProps> = ({ symbolOptions }) => {
                 {option.expiration}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-gray-500 text-right ">
-                ${option.strike}
+                ${option.strike.toFixed(2)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
-                ${option.bid}
+                ${option.bid.toFixed(2)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-gray-500 text-sm font-medium">
                 {Math.floor(option.percentage)}%
