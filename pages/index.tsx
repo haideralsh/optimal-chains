@@ -46,7 +46,7 @@ const Home: NextPage = () => {
         setData(data);
 
         if (isEmpty(data))
-          setError(`No options found were found for ${symbols}`);
+          setError(`No options found were found for ${symbols.toUpperCase()}`);
       })
       .catch(() => setError("An error has occurred"))
       .finally(() => setLoading(false));
