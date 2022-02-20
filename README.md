@@ -1,5 +1,3 @@
-![Optimal Chains Logo](/public/logo.svg)
+<img src="./public/logo.svg" alt="optimal chains logo" width="300" height="auto" />
 
-# Optimal Chains
-
-> A tool to find the most optimal option chains for a given underlying
+> A tool to search through option chains to find the most optimal for a given underlying
