@@ -64,7 +64,7 @@ const Home: NextPage = () => {
     <main className="flex h-full w-full justify-center">
       <div className="flex flex-col mt-8 min-w-[580px]">
         <div className="mb-8">
-          <Image src="/logo.svg" alt="app logo" width={115} height={58} />
+          <Image src="/logo.svg" alt="app logo" width={138} height={60} />
         </div>
         <form
           className="flex gap-4 items-end"
