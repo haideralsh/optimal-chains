@@ -1,15 +1,17 @@
-import type { NextPage } from "next";
+import { useMemo, useState } from "react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import OptionsTable from "../components/OptionsTable";
+import type { NextPage } from "next";
+import OptionsTable from "../components/results/OptionsTable";
+import PercentageInput from "../components/formInputs/PercentageInput";
+import SymbolsSearchbox from "../components/formInputs/SymbolsSearchbox";
+import { isEmpty } from "../components/utils";
+import Results from "../components/results/Result";
 
 const inDev = process.env.NODE_ENV === "development";
 
 const API_ENDPOINT = inDev
   ? "https://optimal-chains.vercel.app/api/chains"
   : "/api/chains/";
-
-export const isEmpty = (obj: Record<any, any>) => Object.keys(obj).length === 0;
 
 const Home: NextPage = () => {
   const [symbols, setSymbols] = useState("");
@@ -19,7 +21,7 @@ const Home: NextPage = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const resetState = () => {
+  const reset = () => {
     setData({});
     setError("");
     setLoading(true);
@@ -27,16 +29,16 @@ const Home: NextPage = () => {
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
-    resetState();
+    reset();
 
-    if (!formIsValid()) {
+    if (!isFormValid()) {
       setError("Please enter valid symbols.");
       return;
     }
 
     fetch(API_ENDPOINT, {
       body: JSON.stringify({
-        symbols: Array.from(getSymbolsSet()),
+        symbols: Array.from(symbolsSet),
         percentage,
       }),
       method: "POST",
@@ -52,76 +54,45 @@ const Home: NextPage = () => {
       .finally(() => setLoading(false));
   };
 
-  const formIsValid = () => {
-    const symbolsSet = getSymbolsSet();
+  const isFormValid = () => symbolsSet.size > 0;
 
-    return symbolsSet.size > 0;
-  };
+  const symbolsSet = useMemo(
+    () => new Set(symbols?.split(",").map((s) => s.trim())),
+    [symbols]
+  );
 
-  const getSymbolsSet = () => new Set(symbols?.split(",").map((s) => s.trim()));
+  const disableSubmit = useMemo(
+    () => () => symbols.trim().length === 0 || percentage <= 0 || loading,
+    [symbols, percentage, loading]
+  );
 
   return (
     <main className="flex h-full w-full justify-center">
-      <div className="flex flex-col mt-8 min-w-[580px]">
+      <div className="mt-8 flex min-w-[580px] flex-col">
         <div className="mb-8">
           <Image src="/logo.svg" alt="app logo" width={138} height={60} />
         </div>
         <form
-          className="flex gap-4 items-end"
+          className="flex items-end gap-4"
           name="optimal-chains"
           onSubmit={handleSubmit}
         >
           <div className="flex items-end gap-0.5">
-            <fieldset className="flex flex-col w-72">
-              <label htmlFor="symbols" className="text-gray-500 text-xs pb-1">
-                Enter one or more symbols
-              </label>
-              <input
-                name="symbols"
-                className="bg-gray-100 focus:bg-gray-200 outline-none text-gray-700 uppercase p-1 px-3 rounded-l-full text-sm placeholder:text-gray-400 placeholder:text-sm placeholder:normal-case placeholder:font-sans"
-                maxLength={25}
-                placeholder="Example: AAPL, SPY, TSLA"
-                value={symbols}
-                onChange={(e) => setSymbols(e.target.value)}
-              />
-            </fieldset>
-            <fieldset className="flex flex-col w-18">
-              <label
-                htmlFor="percentage"
-                className="text-gray-500 text-xs pb-1"
-              >
-                Percentage
-              </label>
-              <div className="relative">
-                <span className="absolute flex items-center right-3 text-sm text-gray-400 top-0 bottom-0">
-                  %
-                </span>
-                <input
-                  name="percentage"
-                  className="w-full bg-gray-100 focus:bg-gray-200 text-gray-700 outline-none uppercase p-1 px-3 rounded-r-full text-sm placeholder:text-gray-400 placeholder:text-sm placeholder:normal-case placeholder:font-sans"
-                  max={100}
-                  maxLength={3}
-                  min={1}
-                  type="number"
-                  value={percentage}
-                  onChange={(e) => setPercentage(Number(e.target.value))}
-                />
-              </div>
-            </fieldset>
+            <SymbolsSearchbox symbols={symbols} onSymbolsChange={setSymbols} />
+            <PercentageInput
+              percentage={percentage}
+              onPercentageChange={setPercentage}
+            />
           </div>
           <button
-            disabled={symbols.trim().length === 0 || percentage <= 0 || loading}
-            className="bg-teal-700 rounded-full text-white py-1 px-6 text-sm disabled:bg-gray-300 disabled:text-gray-400 "
+            disabled={disableSubmit()}
+            className="rounded-full bg-teal-700 py-1 px-6 text-sm text-white disabled:bg-gray-300 disabled:text-gray-400 "
           >
             {loading ? "Loading..." : "Find"}
           </button>
         </form>
 
-        {error ? (
-          <p className="text-xs text-gray-500 mt-8">{error}</p>
-        ) : (
-          <OptionsTable symbolOptions={data} />
-        )}
+        <Results data={data} error={error} />
       </div>
     </main>
   );
