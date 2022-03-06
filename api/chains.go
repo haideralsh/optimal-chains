@@ -58,6 +58,21 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	symbols := parsedRequest.Symbols
 	percentage := parsedRequest.Percentage / 100.00
+
+	res, err := Find(symbols, percentage)
+
+	if err != nil {
+		log.Print(err)
+		fmt.Fprint(w, err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	setCorsHeaders(w)
+
+	w.Write(res)
+}
+
+func Find(symbols []string, percentage float64) ([]byte, error) {
 	coefficient := 1.00 + percentage
 
 	quotes := make(map[string]<-chan float64)
@@ -90,14 +105,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := json.Marshal(optimal)
 	if err != nil {
-		log.Print(err)
-		fmt.Fprint(w, err)
+		return nil, err
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	setCorsHeaders(w)
-
-	w.Write(res)
+	return res, nil
 }
 
 func parseRequest(r *http.Request) (RequestBody, error) {
