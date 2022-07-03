@@ -3,40 +3,19 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"strconv"
-	"time"
+
+	"github.com/haideralsh/oc/utils"
 )
 
 type Symbol = string
 
 const baseUrl = "https://sandbox.tradier.com/v1/markets"
 
-var (
-	token = os.Getenv("TRADIER_TOKEN")
-	mock  = [...]Symbol{ // Sample stock symbols used for local testing
-		"AAPL",
-		"ADBE",
-		"BABA",
-		"F",
-		"FB",
-		"GOOG",
-		"HOOD",
-		"MSFT",
-		"NET",
-		"NKE",
-		"NOK",
-		"NVDA",
-		"SHOP",
-		"SNAP",
-		"TSLA",
-		"UAL",
-	}
-)
+var token = os.Getenv("TRADIER_TOKEN")
 
 type OptionChain struct {
 	Percentage float64 `json:"percentage"`
@@ -67,7 +46,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	setCorsHeaders(w)
+	utils.SetCorsHeaders(w)
 
 	w.Write(res)
 }
@@ -130,8 +109,8 @@ func getOptions(symbol, expiration string) <-chan []interface{} {
 		defer close(r)
 
 		endpoint := fmt.Sprintf("%s/options/chains?symbol=%s&expiration=%s&greeks=false", baseUrl, symbol, expiration)
-		req := buildRequest(endpoint)
-		res := getResponse(req)
+		req := utils.BuildRequest(endpoint, token)
+		res := utils.GetResponse(req)
 
 		var data map[string]interface{}
 		err := json.Unmarshal(res, &data)
@@ -179,8 +158,8 @@ func getQuote(symbol string) <-chan float64 {
 		defer close(r)
 
 		endpoint := fmt.Sprintf("%s/quotes?symbols=%s&greeks=false", baseUrl, symbol)
-		req := buildRequest(endpoint)
-		res := getResponse(req)
+		req := utils.BuildRequest(endpoint, token)
+		res := utils.GetResponse(req)
 
 		var data map[string]interface{}
 		err := json.Unmarshal(res, &data)
@@ -211,8 +190,8 @@ func getOptionExpirations(symbol string) <-chan []interface{} {
 		defer close(r)
 
 		endpoint := fmt.Sprintf("%s//options/expirations?symbol=%s&includeAllRoots=true&strikes=false", baseUrl, symbol)
-		req := buildRequest(endpoint)
-		res := getResponse(req)
+		req := utils.BuildRequest(endpoint, token)
+		res := utils.GetResponse(req)
 
 		var data map[string]interface{}
 		err := json.Unmarshal(res, &data)
@@ -225,41 +204,4 @@ func getOptionExpirations(symbol string) <-chan []interface{} {
 	}()
 
 	return r
-}
-
-func setCorsHeaders(w http.ResponseWriter) {
-	w.Header().Set("Access-Control-Allow-Headers", "*")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "*")
-}
-
-// Utils
-
-func buildRequest(endpoint string) *http.Request {
-	u, _ := url.ParseRequestURI(endpoint)
-	url := u.String()
-
-	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
-	req.Header.Add("Accept", "application/json")
-
-	return req
-}
-
-func getResponse(req *http.Request) []byte {
-	client := &http.Client{}
-
-	res, _ := client.Do(req)
-	data, err := ioutil.ReadAll(res.Body)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return data
-}
-
-func formatDate(date time.Time) string {
-	y, m, d := date.Date()
-	return fmt.Sprintf("%d-%d-%d", y, m, d)
 }

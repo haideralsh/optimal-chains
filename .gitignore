@@ -8,6 +8,9 @@
 # testing
 /coverage
 
+# local testing
+local.go
+
 # next.js
 /.next/
 /out/
