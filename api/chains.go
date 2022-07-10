@@ -29,7 +29,7 @@ type RequestBody struct {
 	Percentage float64  `json:"percentage"`
 }
 
-func Handler(w http.ResponseWriter, r *http.Request) {
+func Chains(w http.ResponseWriter, r *http.Request) {
 	parsedRequest, err := parseRequest(r)
 	if err != nil {
 		fmt.Fprint(w, err)
