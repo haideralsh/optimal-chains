@@ -5,17 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 
-	"github.com/haideralsh/oc/utils"
+	oc "github.com/haideralsh/oc/utils"
 )
-
-type Symbol = string
-
-const baseUrl = "https://sandbox.tradier.com/v1/markets"
-
-var token = os.Getenv("TRADIER_TOKEN")
 
 type OptionChain struct {
 	Percentage float64 `json:"percentage"`
@@ -25,8 +18,8 @@ type OptionChain struct {
 }
 
 type RequestBody struct {
-	Symbols    []Symbol `json:"symbols"`
-	Percentage float64  `json:"percentage"`
+	Symbols    []oc.Symbol `json:"symbols"`
+	Percentage float64     `json:"percentage"`
 }
 
 func Chains(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +31,7 @@ func Chains(w http.ResponseWriter, r *http.Request) {
 	symbols := parsedRequest.Symbols
 	percentage := parsedRequest.Percentage / 100.00
 
-	res, err := Find(symbols, percentage)
+	res, err := find(symbols, percentage)
 
 	if err != nil {
 		log.Print(err)
@@ -46,12 +39,12 @@ func Chains(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	utils.SetCorsHeaders(w)
+	oc.SetCorsHeaders(w)
 
 	w.Write(res)
 }
 
-func Find(symbols []string, percentage float64) ([]byte, error) {
+func find(symbols []string, percentage float64) ([]byte, error) {
 	coefficient := 1.00 + percentage
 
 	quotes := make(map[string]<-chan float64)
@@ -108,9 +101,9 @@ func getOptions(symbol, expiration string) <-chan []interface{} {
 	go func() {
 		defer close(r)
 
-		endpoint := fmt.Sprintf("%s/options/chains?symbol=%s&expiration=%s&greeks=false", baseUrl, symbol, expiration)
-		req := utils.BuildRequest(endpoint, token)
-		res := utils.GetResponse(req)
+		endpoint := fmt.Sprintf("%s/options/chains?symbol=%s&expiration=%s&greeks=false", oc.BaseUrl, symbol, expiration)
+		req := oc.BuildRequest(endpoint, oc.Token)
+		res := oc.GetResponse(req)
 
 		var data map[string]interface{}
 		err := json.Unmarshal(res, &data)
@@ -157,9 +150,9 @@ func getQuote(symbol string) <-chan float64 {
 	go func() {
 		defer close(r)
 
-		endpoint := fmt.Sprintf("%s/quotes?symbols=%s&greeks=false", baseUrl, symbol)
-		req := utils.BuildRequest(endpoint, token)
-		res := utils.GetResponse(req)
+		endpoint := fmt.Sprintf("%s/quotes?symbols=%s&greeks=false", oc.BaseUrl, symbol)
+		req := oc.BuildRequest(endpoint, oc.Token)
+		res := oc.GetResponse(req)
 
 		var data map[string]interface{}
 		err := json.Unmarshal(res, &data)
@@ -189,9 +182,9 @@ func getOptionExpirations(symbol string) <-chan []interface{} {
 	go func() {
 		defer close(r)
 
-		endpoint := fmt.Sprintf("%s//options/expirations?symbol=%s&includeAllRoots=true&strikes=false", baseUrl, symbol)
-		req := utils.BuildRequest(endpoint, token)
-		res := utils.GetResponse(req)
+		endpoint := fmt.Sprintf("%s//options/expirations?symbol=%s&includeAllRoots=true&strikes=false", oc.BaseUrl, symbol)
+		req := oc.BuildRequest(endpoint, oc.Token)
+		res := oc.GetResponse(req)
 
 		var data map[string]interface{}
 		err := json.Unmarshal(res, &data)
