@@ -6,8 +6,15 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 )
+
+type Symbol = string
+
+const BaseUrl = "https://sandbox.tradier.com/v1/markets"
+
+var Token = os.Getenv("TRADIER_TOKEN")
 
 func SetCorsHeaders(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Headers", "*")
