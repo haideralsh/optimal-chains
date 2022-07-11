@@ -10,7 +10,7 @@ import (
 )
 
 func Symbols(w http.ResponseWriter, r *http.Request) {
-	q, err := parseUrl(r.URL)
+	q, err := getQueryString(r.URL, "q")
 	if err != nil {
 		log.Print(err)
 		fmt.Fprint(w, err)
@@ -26,11 +26,11 @@ func Symbols(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func parseUrl(rawUrl *url.URL) (string, error) {
+func getQueryString(rawUrl *url.URL, query string) (string, error) {
 	q, err := url.ParseQuery(rawUrl.RawQuery)
 	if err != nil {
 		return "", err
 	}
 
-	return q.Get("symbol"), nil
+	return q.Get(query), nil
 }
