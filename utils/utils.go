@@ -46,6 +46,15 @@ func GetResponse(req *http.Request) []byte {
 	return data
 }
 
+func GetQueryString(rawUrl *url.URL, query string) (string, error) {
+	q, err := url.ParseQuery(rawUrl.RawQuery)
+	if err != nil {
+		return "", err
+	}
+
+	return q.Get(query), nil
+}
+
 func FormatDate(date time.Time) string {
 	y, m, d := date.Date()
 	return fmt.Sprintf("%d-%d-%d", y, m, d)
