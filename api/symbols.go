@@ -27,19 +27,29 @@ func Symbols(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, err)
 	}
 
-	endpoint := fmt.Sprintf("%s/lookup?q=%s", oc.BaseUrl, q)
-	req := oc.BuildRequest(endpoint, oc.Token)
-	res := oc.GetResponse(req)
-
-	normalized, err := json.Marshal(normalizeResponse(res))
+	s, err := getMatchingSymbols(q)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		fmt.Fprint(w, err)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	oc.SetCorsHeaders(w)
 
-	w.Write(normalized)
+	w.Write(s)
+}
+
+func getMatchingSymbols(query string) ([]byte, error) {
+	endpoint := fmt.Sprintf("%s/lookup?q=%s", oc.BaseUrl, query)
+	req := oc.BuildRequest(endpoint, oc.Token)
+	res := oc.GetResponse(req)
+
+	matches, err := json.Marshal(normalizeResponse(res))
+	if err != nil {
+		return nil, err
+	}
+
+	return matches, nil
 }
 
 func normalizeResponse(res []byte) interface{} {
