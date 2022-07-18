@@ -1,7 +1,7 @@
 type PercentageInput = {
-  percentage: number;
-  onPercentageChange: (percentage: number) => void;
-};
+  percentage: number
+  onPercentageChange: (percentage: number) => void
+}
 
 const PercentageInput: React.FC<PercentageInput> = ({
   percentage,
@@ -42,6 +42,6 @@ const PercentageInput: React.FC<PercentageInput> = ({
       />
     </div>
   </fieldset>
-);
+)
 
-export default PercentageInput;
+export default PercentageInput
