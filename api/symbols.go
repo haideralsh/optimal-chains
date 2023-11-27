@@ -40,7 +40,7 @@ func Symbols(w http.ResponseWriter, r *http.Request) {
 }
 
 func getMatchingSymbols(query string) ([]byte, error) {
-	endpoint := fmt.Sprintf("%s/lookup?q=%s", oc.BaseUrl, query)
+	endpoint := fmt.Sprintf("%s/options/lookup?underlying=%s", oc.BaseUrl, query)
 	req := oc.BuildRequest(endpoint, oc.Token)
 	res := oc.GetResponse(req)
 
