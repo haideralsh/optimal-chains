@@ -59,7 +59,7 @@ func normalizeResponse(res []byte) interface{} {
 		log.Fatal(err)
 	}
 
-	securities := data.(map[string]interface{})["securities"]
+	securities := data.(map[string]interface{})["symbols"]
 
 	// No symbols match query
 	if securities == nil {
@@ -69,7 +69,7 @@ func normalizeResponse(res []byte) interface{} {
 	}
 
 	// One symbol matched query
-	symbol, ok := securities.(map[string]interface{})["security"].(map[string]interface{})
+	symbol, ok := securities.(map[string]interface{})["options"].(map[string]interface{})
 	if ok {
 		var r []interface{}
 		c := append(r, SymbolsDetails{
@@ -85,7 +85,7 @@ func normalizeResponse(res []byte) interface{} {
 	}
 
 	// More than one symbol matched query
-	symbols, ok := securities.(map[string]interface{})["security"].([]interface{})
+	symbols, ok := securities.(map[string]interface{})["options"].([]interface{})
 	if ok {
 		return SymbolsResponse{
 			Symbols: symbols,
