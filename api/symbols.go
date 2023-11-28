@@ -9,15 +9,13 @@ import (
 	oc "github.com/haideralsh/oc/utils"
 )
 
-type SymbolsDetails struct {
-	Symbol      string `json:"symbol"`
-	Exchange    string `json:"exchange"`
-	Type        string `json:"type"`
-	Description string `json:"description"`
+type OptionDetails struct {
+	Symbol string `json:"rootSymbol"`
+	Options []string `json:"options"`
 }
 
-type SymbolsResponse struct {
-	Symbols []interface{} `json:"symbols"`
+type SymbolsDetails struct {
+	Symbols []OptionDetails `json:"symbols"`
 }
 
 func Symbols(w http.ResponseWriter, r *http.Request) {
@@ -53,44 +51,33 @@ func getMatchingSymbols(query string) ([]byte, error) {
 }
 
 func normalizeResponse(res []byte) interface{} {
-	var data interface{}
+	var data SymbolsDetails
 	err := json.Unmarshal(res, &data)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	securities := data.(map[string]interface{})["symbols"]
-
 	// No symbols match query
-	if securities == nil {
+	if len(data.Symbols) == 0 {
 		return SymbolsResponse{
 			Symbols: make([]interface{}, 0),
 		}
 	}
 
-	// One symbol matched query
-	symbol, ok := securities.(map[string]interface{})["options"].(map[string]interface{})
-	if ok {
-		var r []interface{}
-		c := append(r, SymbolsDetails{
-			Symbol:      symbol["symbol"].(string),
-			Exchange:    symbol["exchange"].(string),
-			Type:        symbol["type"].(string),
-			Description: symbol["description"].(string),
+	// One or more symbols matched query
+	var symbols []interface{}
+	for _, option := range data.Symbols {
+		symbols = append(symbols, SymbolsDetails{
+			Symbols: []OptionDetails{
+				OptionDetails{
+					Symbol: option.Symbol,
+					Options: option.Options,
+				},
+			},
 		})
-
-		return SymbolsResponse{
-			Symbols: c,
-		}
 	}
 
-	// More than one symbol matched query
-	symbols, ok := securities.(map[string]interface{})["options"].([]interface{})
-	if ok {
-		return SymbolsResponse{
-			Symbols: symbols,
-		}
+	return SymbolsResponse{
+		Symbols: symbols,
 	}
-
-	return nil
 }
